@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
+using SocketIO;
+using System.Threading;
+using System.Threading.Tasks;
+
 [RequireComponent(typeof(CharacterController), typeof(PlayerInputHandler), typeof(AudioSource))]
 public class PlayerCharacterController : MonoBehaviour
 {
@@ -9,6 +13,10 @@ public class PlayerCharacterController : MonoBehaviour
     public Camera playerCamera;
     [Tooltip("Audio source for footsteps, jump, etc...")]
     public AudioSource audioSource;
+
+    [Header("References")]
+    [Tooltip("Particles for speedUp vfx")]
+    public ParticleSystem speedUpVfx;
 
     [Header("General")]
     [Tooltip("Force applied downward when in the air")]
@@ -118,6 +126,12 @@ public class PlayerCharacterController : MonoBehaviour
     const float k_JumpGroundingPreventionTime = 0.2f;
     const float k_GroundCheckDistanceInAir = 0.07f;
 
+    //BGWEBSOCKET SOCKET TO UNLOCK JETPACK
+    private BGWebSocket APIREST;
+    private bool boolActivateMechanic = false;
+	public float dato = 0;
+
+
     void Start()
     {
         // fetch components on the same gameObject
@@ -185,10 +199,65 @@ public class PlayerCharacterController : MonoBehaviour
             SetCrouchingState(!isCrouching, false);
         }
 
+        checkForSuperSpeed();
+        
+
         UpdateCharacterHeight(false);
 
         HandleCharacterMovement();
+
     }
+    async public void checkForSuperSpeed(){
+        dato = BGWebSocket.instance.Datito2;
+        if(dato != 0){
+			var cancellationTokenSource = new CancellationTokenSource();
+			var cancellationToken = cancellationTokenSource.Token;
+            ToggleSpeedUpEffect();
+			maxSpeedOnGround = 30F;
+			dato = 0;
+			BGWebSocket.instance.Datito2 = 0;
+
+			await Task.Delay(10000).ContinueWith(async (t) =>
+			{
+
+				maxSpeedOnGround = 8F;
+                boolActivateMechanic = false;
+                ToggleSpeedUpEffect();
+
+			}, cancellationToken);
+        }
+        
+        if (Input.GetKeyDown("l") && !boolActivateMechanic )
+        {
+            boolActivateMechanic = true;
+            unlockSuperSpeed();
+
+            print("P key was pressed");
+        }
+
+
+    }
+    
+    public void unlockSuperSpeed(){
+		string videogameInfoString = BGWebSocket.instance.videogameInfo2.ToString();	
+		Debug.Log("He apretado el boton para activar la super velocidad");	
+		Debug.Log(videogameInfoString);
+
+		JSONObject videogameJSONObject = new JSONObject(videogameInfoString);
+		Debug.Log("esta es la version JSONObject del videogameInfo");
+		Debug.Log(videogameJSONObject);
+
+		JSONObject json = new JSONObject();
+
+        json.AddField("room","FPS_Simulator");
+        json.AddField("name","FPS_Simulator");
+		json.AddField("message",videogameJSONObject);
+
+		Debug.Log("Al final se va a mandar esto");
+		Debug.Log(json);
+
+		BGWebSocket.instance.socket.Emit("message",json);
+	}
 
     void OnDie()
     {
@@ -230,6 +299,17 @@ public class PlayerCharacterController : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+    public void ToggleSpeedUpEffect(){
+        Debug.Log("307");
+        Debug.Log(speedUpVfx.isPlaying);
+        if(speedUpVfx.isPlaying){
+            speedUpVfx.Stop();
+        }
+        else{
+            speedUpVfx.Play();
         }
     }
 

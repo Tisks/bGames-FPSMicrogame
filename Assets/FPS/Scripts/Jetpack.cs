@@ -88,9 +88,7 @@ public class Jetpack : MonoBehaviour
 		BGWebSocket.instance.socket.Emit("message",json);
 	}
 
-
-    void Update()
-    {
+    public void checkForUnlockJetpack(){
         dato = BGWebSocket.instance.Datito;
 		if(dato != 0){
             isJetpackUnlocked = true;
@@ -105,6 +103,13 @@ public class Jetpack : MonoBehaviour
 
             print("J key was pressed");
         }
+
+    }
+
+
+    void Update()
+    {
+        checkForUnlockJetpack();
         // jetpack can only be used if not grounded and jump has been pressed again once in-air
         if(isPlayergrounded())
         {

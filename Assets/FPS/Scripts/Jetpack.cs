@@ -94,6 +94,12 @@ public class Jetpack : MonoBehaviour
             isJetpackUnlocked = true;
             dato = 0;
             BGWebSocket.instance.Datito = 0;
+            var json = new Boomlagoon.JSON.JSONObject();
+            json.Add("room","FPS_Simulator");
+            json.Add("name","FPS_Simulator");
+            json.Add("message",1);
+            string data = json.ToString();
+            BGWebSocket.instance.socket.Emit("Dimessage",new JSONObject(data));
 		}
         
         if (Input.GetKeyDown("j") && !boolActivateMechanic )

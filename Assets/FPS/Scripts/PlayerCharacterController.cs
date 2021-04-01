@@ -131,6 +131,7 @@ public class PlayerCharacterController : MonoBehaviour
     private bool boolActivateMechanic = false;
 	public float dato = 0;
 
+	public float dato3 = 0;
 
     void Start()
     {
@@ -207,24 +208,27 @@ public class PlayerCharacterController : MonoBehaviour
         HandleCharacterMovement();
 
     }
+   async public void slowDownSpeed(int time){
+		var cancellationTokenSource = new CancellationTokenSource();
+		var cancellationToken = cancellationTokenSource.Token;
+		maxSpeedOnGround = 30F;
+		await Task.Delay(time).ContinueWith(async (t) =>
+		{
+            maxSpeedOnGround = 8F;
+            boolActivateMechanic = false;
+            ToggleSpeedUpEffect();
+
+		}, cancellationToken);     
+
+	}
     async public void checkForSuperSpeed(){
         dato = BGWebSocket.instance.Datito2;
+        dato3 = BGWebSocket.instance.Datito3;
+
         if(dato != 0){
-			var cancellationTokenSource = new CancellationTokenSource();
-			var cancellationToken = cancellationTokenSource.Token;
-            ToggleSpeedUpEffect();
-			maxSpeedOnGround = 30F;
 			dato = 0;
 			BGWebSocket.instance.Datito2 = 0;
-
-			await Task.Delay(10000).ContinueWith(async (t) =>
-			{
-
-				maxSpeedOnGround = 8F;
-                boolActivateMechanic = false;
-                ToggleSpeedUpEffect();
-
-			}, cancellationToken);
+            slowDownSpeed(10000);
         }
         
         if (Input.GetKeyDown("l") && !boolActivateMechanic )
@@ -233,6 +237,11 @@ public class PlayerCharacterController : MonoBehaviour
             unlockSuperSpeed();
 
             print("P key was pressed");
+        }
+        if(dato3 !=0 && !boolActivateMechanic){
+            dato3 = 0;
+			BGWebSocket.instance.Datito3 = 0;
+            slowDownSpeed(5000);
         }
 
 

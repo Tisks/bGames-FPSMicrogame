@@ -14,6 +14,7 @@ public class BGWebSocket : MonoBehaviour
     private float datito = 0;
     private float datito2 = 0;
 
+    private float datito3 = 0;
     private float id_player = 0;
     private float id_videogame = 5;
 
@@ -30,6 +31,7 @@ public class BGWebSocket : MonoBehaviour
 
     public float Datito { get => datito; set => datito = value; }
     public float Datito2 { get => datito2; set => datito2 = value; }
+    public float Datito3 { get => datito3; set => datito3 = value; }
 
     void Start()
     {
@@ -43,6 +45,7 @@ public class BGWebSocket : MonoBehaviour
         socket.On("AllSensors",OnAllSensors);
         socket.On("Smessage",OnSmessage);
         socket.On("Imessage",OnImessage);
+        socket.On("Omessage",OnOmessage);
 
         videogameInfo = new  Boomlagoon.JSON.JSONObject();
         videogameInfo.Add("id_videogame",id_videogame);
@@ -68,6 +71,10 @@ public class BGWebSocket : MonoBehaviour
         socket.Emit("join_sensor_videogame",new JSONObject(data));
         yield return new WaitForSeconds(0.5f);
         Debug.Log("Se conecto BGWebSocket ?");
+        yield return new WaitForSeconds(0.5f);
+        socket.Emit("join_offline_sensors",new JSONObject(data));
+        yield return new WaitForSeconds(0.5f);
+        Debug.Log("Se conecto los sensores ?");
     }
     private void OnAllSensors(SocketIOEvent socketIOevent)
     {
@@ -109,6 +116,14 @@ public class BGWebSocket : MonoBehaviour
         }
 
         Debug.Log("DateTime.Now.Millisecond TIEMPOOOOOO: "+(new TimeSpan(DateTime.Now.Ticks)).TotalMilliseconds);
+    }
+     private void OnOmessage(SocketIOEvent socketIOevent){
+        string data = socketIOevent.data.ToString();
+        Debug.Log(data);
+        var jj = socketIOevent.data;
+        var json = Boomlagoon.JSON.JSONObject.Parse(data);
+        string message = json.GetString("message");
+        Datito3 = float.Parse(message);
     }
 
     public void GetAllSensors(){
